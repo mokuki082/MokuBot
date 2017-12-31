@@ -67,17 +67,17 @@ class MokuBot():
         seconds = td.seconds % 60
 
         text = 'MokuBot has been up for '
-        if days == 0 or days > 1:
+        if days > 1:
             text += '{} days '.format(days)
-        else:
+        elif days > 0:
             text += '{} day '.format(days)
-        if hours == 0 or hours > 1:
+        if hours > 1:
             text += '{} hours '.format(hours)
-        else:
+        elif hours > 0:
             text += '{} hour '.format(hours)
-        if minutes == 0 or minutes > 1:
+        if minutes > 1:
             text += '{} minutes '.format(minutes)
-        else:
+        elif minutes > 0:
             text += '{} minute '.format(minutes)
         if seconds == 0 or seconds > 1:
             text += '{} seconds.'.format(seconds)
