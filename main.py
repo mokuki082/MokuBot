@@ -1,20 +1,26 @@
 #!/usr/bin/env python3
 
+try:
+    from telegram.ext import *
+    from telegram.error import *
+except ImportError:
+    HAS_TELEGRAM = False
+
+from datetime import datetime
 import json
 import threading
-from datetime import datetime
 import logging
+import crawler
 
 # Global Variables
 VERSION = '1.0.0'
 HAS_TELEGRAM = True
 
-try:
-    from telegram.error import InvalidToken
-    from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
-except ImportError:
-    HAS_TELEGRAM = False
 
+
+###
+### CLASS: MOKUBOT
+###
 
 class MokuBot():
 
@@ -28,7 +34,11 @@ class MokuBot():
         token -- Telegram Bot token
         """
 
+        # Initialize start time
         self.start_time = datetime.now()
+
+        # Initialize Quote generators
+        self.flirt_quoter = crawler.FlirtQuotes()
 
         # Initialize updater
         try:
@@ -41,15 +51,36 @@ class MokuBot():
 
         hello_handler = CommandHandler('uptime', self.uptime)
         self.updater.dispatcher.add_handler(hello_handler)
-        # Unknown commands
-        unknown_handler = MessageHandler(Filters.command, self.unknown)
-        self.updater.dispatcher.add_handler(unknown_handler)
+        hello_handler = CommandHandler('utpime', self.uptime)
+        self.updater.dispatcher.add_handler(hello_handler)
+        flirt_handler = RegexHandler('^/flirt($| .+)', self.flirt)
+        self.updater.dispatcher.add_handler(flirt_handler)
 
     def stop(self):
 
         """ Stop polling updates """
 
         self.updater.stop()
+
+    def flirt(self, bot, update):
+
+        """ flirt command handler
+
+        Keyword arguments:
+        bot -- A dictionary containing bot information
+        update -- a dictionary containing command sender's information
+        """
+
+        name = ' '.join(update['message']['text'].split()[1:])
+        quote, source = self.flirt_quoter.rand_quote()
+        if name:
+            reply = '{name}, {quote}\n\nSource: {source}'
+            update.message.reply_text(reply.format(name=name, quote=quote,
+                                                   source=source))
+        else:
+            reply = '{quote}\n\nSource: {source}'
+            update.message.reply_text(reply.format(quote=quote, source=source))
+
 
     def uptime(self, bot, update):
 
@@ -85,22 +116,13 @@ class MokuBot():
             text += '{} second.'.format(seconds)
         update.message.reply_text(text)
 
-    def unknown(self, bot, update):
-
-        """ Known command handler
-
-        Keyword arguments:
-        bot -- A dictionary containing bot information
-        update -- a dictionary containing command sender's information
-        """
-
-        text = 'Sorry, I didn\'t understand that command.'
-        update.message.reply_text(text)
-
     def run(self):
         """ Start polling updates """
         self.updater.start_polling(poll_interval=0.5)
 
+###
+### END OF CLASS: MOKUBOT
+###
 
 def command_engine(mokubot):
 
@@ -119,6 +141,7 @@ def command_engine(mokubot):
             break
         else:
             print('Invalid command. Enter \'help\' for list of commands.')
+
 
 def generate_config():
 
