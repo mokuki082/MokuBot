@@ -60,10 +60,10 @@ class Crawler():
 
 class FlirtQuotes():
     def __init__(self):
-        url = 'http://pickup-lines.net/cheesy-corny/page/{page_num}/'
+        url = 'http://pickup-lines.net/page/{page_num}/'
         xpath = '//span[@class="loop-entry-line"]'
         url_xpath = []
-        for i in range(1,28):
+        for i in range(1,73):
             url_xpath.append((url.format(page_num=i), xpath))
         crawler = Crawler(*url_xpath)
         self.quotes = crawler.crawl()

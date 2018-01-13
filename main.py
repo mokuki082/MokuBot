@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
 
+# Global Variables
+VERSION = '1.0.0'
+HAS_TELEGRAM = True
+HAS_CHATTERBOT = False
+
 try:
     from telegram.ext import *
     from telegram.error import *
@@ -11,10 +16,7 @@ import json
 import threading
 import logging
 import crawler
-
-# Global Variables
-VERSION = '1.0.0'
-HAS_TELEGRAM = True
+from chatbot import Chat
 
 
 
@@ -37,8 +39,11 @@ class MokuBot():
         # Initialize start time
         self.start_time = datetime.now()
 
-        # Initialize Quote generators
-        self.flirt_quoter = crawler.FlirtQuotes()
+        # # Initialize Quote generators
+        # self.flirt_quoter = crawler.FlirtQuotes()
+
+        # Initialize Chatbot
+        self.chat = Chat('MokuBot')
 
         # Initialize updater
         try:
@@ -49,12 +54,14 @@ class MokuBot():
             print('and replace your token at config.json')
             exit(1)
 
-        hello_handler = CommandHandler('uptime', self.uptime)
-        self.updater.dispatcher.add_handler(hello_handler)
-        hello_handler = CommandHandler('utpime', self.uptime)
-        self.updater.dispatcher.add_handler(hello_handler)
-        flirt_handler = RegexHandler('^/flirt($| .+)', self.flirt)
-        self.updater.dispatcher.add_handler(flirt_handler)
+        uptime_handler = CommandHandler('uptime', self.uptime)
+        self.updater.dispatcher.add_handler(uptime_handler)
+        uptime_handler = CommandHandler('utpime', self.uptime)
+        self.updater.dispatcher.add_handler(uptime_handler)
+        # flirt_handler = RegexHandler('^/flirt($| .+)', self.flirt)
+        # self.updater.dispatcher.add_handler(flirt_handler)
+        chat_handler = RegexHandler('^/chat .*', self.chat_handler)
+        self.updater.dispatcher.add_handler(chat_handler)
 
     def stop(self):
 
@@ -115,6 +122,20 @@ class MokuBot():
         else:
             text += '{} second.'.format(seconds)
         update.message.reply_text(text)
+
+    def chat_handler(self, bot, update):
+
+        """ chat command handler
+
+        Keyword arguments:
+        bot -- A dictionary containing bot information
+        update -- a dictionary containing command sender's information
+        """
+
+        text = ' '.join(update['message']['text'].split()[1:])
+        resp = self.chat.get_response(text)
+        update.message.reply_text(resp)
+
 
     def run(self):
         """ Start polling updates """
